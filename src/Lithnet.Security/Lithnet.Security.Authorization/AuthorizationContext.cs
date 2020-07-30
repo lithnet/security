@@ -323,7 +323,7 @@ namespace Lithnet.Security.Authorization
                     AuthzRpcInitInfoClient client = new AuthzRpcInitInfoClient
                     {
                         Version = AuthzRpcClientVersion.V1,
-                        ObjectUuid = NativeMethods.AuthzObjectUuidWithcap,
+                        ObjectUuid = NativeMethods.AuthzObjectUuidWithoutCap,
                         Protocol = NativeMethods.RcpOverTcpProtocol,
                         Server = authzServerName
                     };

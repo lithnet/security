@@ -9,8 +9,11 @@ namespace Lithnet.Security.Authorization.Interop
     internal struct AuthzAccessReply // AUTHZ_ACCESS_REPLY
     {
         public int ResultListLength;
+
         public IntPtr GrantedAccessMask;
+
         public IntPtr SaclEvaluationResults;
+
         public IntPtr Error;
     }
 }

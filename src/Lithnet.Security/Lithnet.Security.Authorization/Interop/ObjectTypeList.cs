@@ -9,7 +9,9 @@ namespace Lithnet.Security.Authorization.Interop
     internal struct ObjectTypeList //OBJECT_TYPE_LIST
     {
         public ObjectTypeLevel Level;
+
         public short Sbz;
+
         public IntPtr ObjectType;
     };
 }
