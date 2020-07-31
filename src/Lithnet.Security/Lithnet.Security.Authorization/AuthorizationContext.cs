@@ -11,7 +11,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Lithnet.Security.Authorization
 {
-    public class AuthorizationContext
+    public sealed class AuthorizationContext : IDisposable
     {
         private readonly SafeAuthzContextHandle authzContext;
 
@@ -360,6 +360,26 @@ namespace Lithnet.Security.Authorization
             }
 
             return authzRm;
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                authzContext?.Dispose();
+                authzRm?.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~AuthorizationContext()
+        {
+            Dispose(false);
         }
     }
 }
