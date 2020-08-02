@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using Lithnet.AccessManager;
 using Lithnet.Security.Authorization.Interop;
 using Microsoft.Win32.SafeHandles;
 
@@ -15,7 +14,7 @@ namespace Lithnet.Security.Authorization
     {
         private readonly SafeAuthzContextHandle authzContext;
 
-        private SafeAuthzResourceManagerHandle authzRm;
+        private readonly SafeAuthzResourceManagerHandle authzRm;
 
         /// <summary>
         /// Gets the server that the authorization context was established against. This value is null if the local server was used.
@@ -31,14 +30,23 @@ namespace Lithnet.Security.Authorization
         /// Initializes a new instance of the AuthorizationContext class
         /// </summary>
         /// <param name="principal">The security identifier of the principal to build the authorization context for</param>
-        public AuthorizationContext(SecurityIdentifier principal) : this(principal, null, false) { }
+        public AuthorizationContext(SecurityIdentifier principal) : this(principal, null, false, AuthzInitFlags.Default) { }
 
         /// <summary>
         /// Initializes a new instance of the AuthorizationContext class
         /// </summary>
         /// <param name="principal">The security identifier of the principal to build the authorization context for</param>
         /// <param name="server">The remote server to use to build the authorization context</param>
-        public AuthorizationContext(SecurityIdentifier principal, string server) : this(principal, server, false) { }
+        public AuthorizationContext(SecurityIdentifier principal, string server) : this(principal, server, false, AuthzInitFlags.Default) { }
+
+
+        /// <summary>
+        /// Initializes a new instance of the AuthorizationContext class
+        /// </summary>
+        /// <param name="principal">The security identifier of the principal to build the authorization context for</param>
+        /// <param name="server">The remote server to use to build the authorization context</param>
+        /// <param name="flags">The initialization flags used to build the context</param>
+        public AuthorizationContext(SecurityIdentifier principal, string server, AuthzInitFlags flags) : this(principal, server, false, flags) { }
 
         /// <summary>
         /// Initializes a new instance of the AuthorizationContext class
@@ -46,7 +54,8 @@ namespace Lithnet.Security.Authorization
         /// <param name="principal">The security identifier of the principal to build the authorization context for</param>
         /// <param name="server">The remote server to use to build the authorization context</param>
         /// <param name="allowLocalFallback">A value that indicates if automatically falling back to the local server is allowed if the remote context fails to be established. If fallback occurs, the context will be initialized with the <see cref="Server"/> field set to null</param>
-        public AuthorizationContext(SecurityIdentifier principal, string server, bool allowLocalFallback)
+        /// <param name="flags">The initialization flags used to build the context</param>
+        public AuthorizationContext(SecurityIdentifier principal, string server, bool allowLocalFallback, AuthzInitFlags flags)
         {
             this.SecurityIdentifer = principal;
 
@@ -61,21 +70,29 @@ namespace Lithnet.Security.Authorization
                 this.Server = server;
             }
 
-            this.authzContext = InitializeAuthorizationContextFromSid(this.authzRm, this.SecurityIdentifer);
+            this.authzContext = InitializeAuthorizationContextFromSid(this.authzRm, this.SecurityIdentifer, flags);
         }
 
         /// <summary>
         /// Initializes a new instance of the AuthorizationContext class
         /// </summary>
         /// <param name="accessToken">The access token of the principal to build the authorization context for</param>
-        public AuthorizationContext(SafeAccessTokenHandle accessToken) : this(accessToken, null, false) { }
+        public AuthorizationContext(SafeAccessTokenHandle accessToken) : this(accessToken, null, false, AuthzInitFlags.Default) { }
 
         /// <summary>
         /// Initializes a new instance of the AuthorizationContext class
         /// </summary>
         /// <param name="accessToken">The access token of the principal to build the authorization context for</param>
         /// <param name="server">The remote server to use to build the authorization context</param>
-        public AuthorizationContext(SafeAccessTokenHandle accessToken, string server) : this(accessToken, server, false) { }
+        public AuthorizationContext(SafeAccessTokenHandle accessToken, string server) : this(accessToken, server, false, AuthzInitFlags.Default) { }
+
+        /// <summary>
+        /// Initializes a new instance of the AuthorizationContext class
+        /// </summary>
+        /// <param name="accessToken">The access token of the principal to build the authorization context for</param>
+        /// <param name="server">The remote server to use to build the authorization context</param>
+        /// <param name="flags">The initialization flags used to build the context</param>
+        public AuthorizationContext(SafeAccessTokenHandle accessToken, string server, AuthzInitFlags flags) : this(accessToken, server, false, flags) { }
 
         /// <summary>
         /// Initializes a new instance of the AuthorizationContext class
@@ -83,7 +100,8 @@ namespace Lithnet.Security.Authorization
         /// <param name="accessToken">The access token of the principal to build the authorization context for</param>
         /// <param name="server">The remote server to use to build the authorization context</param>
         /// <param name="allowLocalFallback">A value that indicates if automatically falling back to the local server is allowed if the remote context fails to be established. If fallback occurs, the context will be initialized with the <see cref="Server"/> field set to null</param>
-        public AuthorizationContext(SafeAccessTokenHandle accessToken, string server, bool allowLocalFallback)
+        /// <param name="flags">The initialization flags used to build the context</param>
+        public AuthorizationContext(SafeAccessTokenHandle accessToken, string server, bool allowLocalFallback, AuthzInitFlags flags)
         {
             this.authzRm = InitializeResourceManager(server, allowLocalFallback, out bool localFallbackOccurred);
             this.SecurityIdentifer = GetSecurityIdentifierFromAccessToken(accessToken.DangerousGetHandle());
@@ -97,7 +115,7 @@ namespace Lithnet.Security.Authorization
                 this.Server = server;
             }
 
-            this.authzContext = InitializeAuthorizationContextFromToken(this.authzRm, accessToken);
+            this.authzContext = InitializeAuthorizationContextFromToken(this.authzRm, accessToken, flags);
         }
 
         /// <summary>
@@ -238,13 +256,7 @@ namespace Lithnet.Security.Authorization
             int othersCount = otherSecurityDescriptors?.Count ?? 0;
             if (othersCount > 0)
             {
-                List<byte[]> list = new List<byte[]>();
-                foreach (var item in otherSecurityDescriptors)
-                {
-                    list.Add(item.ToBytes());
-                }
-
-                LpArrayOfByteArrayConverter r = new LpArrayOfByteArrayConverter(list);
+                LpArrayOfByteArrayConverter r = new LpArrayOfByteArrayConverter(otherSecurityDescriptors.Select(t => t.ToBytes()).ToList());
                 pOthers = r.Ptr;
             }
 
@@ -269,16 +281,11 @@ namespace Lithnet.Security.Authorization
             return new WindowsIdentity(accessToken)?.User;
         }
 
-        private static SafeAuthzContextHandle InitializeAuthorizationContextFromToken(SafeAuthzResourceManagerHandle authzRm, SafeAccessTokenHandle accessToken)
+        private static SafeAuthzContextHandle InitializeAuthorizationContextFromToken(SafeAuthzResourceManagerHandle authzRm, SafeAccessTokenHandle accessToken, AuthzInitFlags flags)
         {
-            if (!NativeMethods.AuthzInitializeContextFromToken(AuthzInitFlags.Default, accessToken, authzRm, IntPtr.Zero, Luid.NullLuid, IntPtr.Zero, out SafeAuthzContextHandle userClientCtxt))
+            if (!NativeMethods.AuthzInitializeContextFromToken(flags, accessToken, authzRm, IntPtr.Zero, Luid.NullLuid, IntPtr.Zero, out SafeAuthzContextHandle userClientCtxt))
             {
                 int errorCode = Marshal.GetLastWin32Error();
-
-                if (errorCode == 5)
-                {
-                    throw new AuthorizationContextException("AuthzInitializeContextFromSid failed", new Win32Exception(errorCode, "Access was denied. Please ensure that \r\n1) The service account is a member of the built-in group called 'Windows Authorization Access Group' in the domain where the computer object is located\r\n2) The service account is a member of the built-in group called 'Access Control Assistance Operators' in the domain where the computer object is located"));
-                }
 
                 throw new AuthorizationContextException("AuthzInitializeContextFromSid failed", new Win32Exception(errorCode));
             }
@@ -286,19 +293,14 @@ namespace Lithnet.Security.Authorization
             return userClientCtxt;
         }
 
-        private static SafeAuthzContextHandle InitializeAuthorizationContextFromSid(SafeAuthzResourceManagerHandle authzRm, SecurityIdentifier sid)
+        private static SafeAuthzContextHandle InitializeAuthorizationContextFromSid(SafeAuthzResourceManagerHandle authzRm, SecurityIdentifier sid, AuthzInitFlags flags)
         {
             byte[] sidBytes = new byte[sid.BinaryLength];
             sid.GetBinaryForm(sidBytes, 0);
 
-            if (!NativeMethods.AuthzInitializeContextFromSid(AuthzInitFlags.Default, sidBytes, authzRm, IntPtr.Zero, Luid.NullLuid, IntPtr.Zero, out SafeAuthzContextHandle userClientCtxt))
+            if (!NativeMethods.AuthzInitializeContextFromSid(flags, sidBytes, authzRm, IntPtr.Zero, Luid.NullLuid, IntPtr.Zero, out SafeAuthzContextHandle userClientCtxt))
             {
                 int errorCode = Marshal.GetLastWin32Error();
-
-                if (errorCode == 5)
-                {
-                    throw new AuthorizationContextException("AuthzInitializeContextFromSid failed", new Win32Exception(errorCode, "Access was denied. Please ensure that \r\n1) The service account is a member of the built-in group called 'Windows Authorization Access Group' in the domain where the computer object is located\r\n2) The service account is a member of the built-in group called 'Access Control Assistance Operators' in the domain where the computer object is located"));
-                }
 
                 throw new AuthorizationContextException("AuthzInitializeContextFromSid failed", new Win32Exception(errorCode));
             }
@@ -327,7 +329,6 @@ namespace Lithnet.Security.Authorization
                         Protocol = NativeMethods.RcpOverTcpProtocol,
                         Server = authzServerName
                     };
-
 
                     SafeAllocHGlobalHandle clientInfo = new SafeAllocHGlobalHandle(Marshal.SizeOf(typeof(AuthzRpcInitInfoClient)));
                     IntPtr pClientInfo = clientInfo.DangerousGetHandle();

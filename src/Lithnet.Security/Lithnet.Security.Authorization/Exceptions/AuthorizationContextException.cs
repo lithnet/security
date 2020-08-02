@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Lithnet.AccessManager
+namespace Lithnet.Security.Authorization
 {
     [Serializable]
     public class AuthorizationContextException : Exception

@@ -11,8 +11,8 @@
     <PackageProjectUrl>https://github.com/lithnet/security</PackageProjectUrl>
     <RepositoryUrl>https://github.com/lithnet/security</RepositoryUrl>
     <FileVersion>1.0.$([System.DateTime]::UtcNow.Date.Subtract($([System.DateTime]::Parse("2000-01-01"))).TotalDays).$([System.Math]::Floor($([MSBuild]::Divide($([System.DateTime]::UtcNow.TimeOfDay.TotalSeconds), 1.32))))</FileVersion>
-    <Version>1.0.7517.60139</Version>
-    <AssemblyVersion>1.0.7517.60139</AssemblyVersion>
+    <Version>1.0.7518.2238</Version>
+    <AssemblyVersion>1.0.7518.2238</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">

@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace Lithnet.Security.Authorization.Interop
+namespace Lithnet.Security.Authorization
 {
     [Flags]
-    internal enum AuthzInitFlags : uint
+    public enum AuthzInitFlags : uint
     {
         Default = 0x0,
         SkipTokenGroups = 0x2,
