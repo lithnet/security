@@ -24,7 +24,7 @@ namespace Lithnet.Security.Authorization
         /// <summary>
         /// Gets the security identifier of the principal represented by this authorization context
         /// </summary>
-        public SecurityIdentifier SecurityIdentifer { get; private set; }
+        public SecurityIdentifier SecurityIdentifier { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the AuthorizationContext class
@@ -57,7 +57,7 @@ namespace Lithnet.Security.Authorization
         /// <param name="flags">The initialization flags used to build the context</param>
         public AuthorizationContext(SecurityIdentifier principal, string server, bool allowLocalFallback, AuthzInitFlags flags)
         {
-            this.SecurityIdentifer = principal;
+            this.SecurityIdentifier = principal;
 
             this.authzRm = InitializeResourceManager(server, allowLocalFallback, out bool localFallbackOccurred);
 
@@ -70,7 +70,17 @@ namespace Lithnet.Security.Authorization
                 this.Server = server;
             }
 
-            this.authzContext = InitializeAuthorizationContextFromSid(this.authzRm, this.SecurityIdentifer, flags);
+            this.authzContext = InitializeAuthorizationContextFromSid(this.authzRm, this.SecurityIdentifier, flags);
+        }
+
+        public AuthorizationContext(UnmanagedIdentity identity)
+        {
+            this.SecurityIdentifier = identity.SecurityIdentifier;
+
+            this.authzRm = InitializeResourceManager(null, false, out bool localFallbackOccurred);
+            this.Server = null;
+
+            this.authzContext = InitializeAuthorizationContextFromSid(this.authzRm, this.SecurityIdentifier, AuthzInitFlags.SkipTokenGroups);
         }
 
         /// <summary>
@@ -104,7 +114,7 @@ namespace Lithnet.Security.Authorization
         public AuthorizationContext(SafeAccessTokenHandle accessToken, string server, bool allowLocalFallback, AuthzInitFlags flags)
         {
             this.authzRm = InitializeResourceManager(server, allowLocalFallback, out bool localFallbackOccurred);
-            this.SecurityIdentifer = GetSecurityIdentifierFromAccessToken(accessToken.DangerousGetHandle());
+            this.SecurityIdentifier = GetSecurityIdentifierFromAccessToken(accessToken.DangerousGetHandle());
 
             if (localFallbackOccurred)
             {

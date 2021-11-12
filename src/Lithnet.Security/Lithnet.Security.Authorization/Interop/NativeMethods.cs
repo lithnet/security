@@ -45,5 +45,17 @@ namespace Lithnet.Security.Authorization.Interop
 
         [DllImport("authz.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern bool AuthzAccessCheck(AuthzAccessCheckFlags flags, SafeAuthzContextHandle hAuthzClientContext, ref AuthzAccessRequest pRequest, IntPtr AuditEvent, [MarshalAs(UnmanagedType.LPArray)] byte[] pSecurityDescriptor, IntPtr OptionalSecurityDescriptorArray, int OptionalSecurityDescriptorCount, ref AuthzAccessReply pReply, IntPtr phAccessCheckResults);
+
+        [DllImport("authz.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern bool AuthzAddSidsToContext(SafeAuthzContextHandle hAuthzClientContext, IntPtr sids, int sidCount, IntPtr restrictedSids, int restrictedSidCount, out SafeAuthzContextHandle hNewClientContext);
     }
 }
+
+/*AUTHZAPI BOOL AuthzAddSidsToContext(
+  AUTHZ_CLIENT_CONTEXT_HANDLE  hAuthzClientContext,
+  PSID_AND_ATTRIBUTES          Sids,
+  DWORD                        SidCount,
+  PSID_AND_ATTRIBUTES          RestrictedSids,
+  DWORD                        RestrictedSidCount,
+  PAUTHZ_CLIENT_CONTEXT_HANDLE phNewAuthzClientContext
+);*/
