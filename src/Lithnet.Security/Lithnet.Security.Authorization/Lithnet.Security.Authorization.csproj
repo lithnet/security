@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net461</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0</TargetFrameworks>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<SignAssembly>false</SignAssembly>
 		<Authors>Lithnet</Authors>
@@ -10,30 +10,21 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/lithnet/security</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/lithnet/security</RepositoryUrl>
+		<PackageOutputPath>D:\dev\nuget\packages</PackageOutputPath>
 		<Deterministic>false</Deterministic>
 		<VersionSuffix>1.0.$([System.DateTime]::UtcNow.Date.Subtract($([System.DateTime]::Parse("2000-01-01"))).TotalDays).$([System.Math]::Floor($([MSBuild]::Divide($([System.DateTime]::UtcNow.TimeOfDay.TotalSeconds), 1.32))))</VersionSuffix>
 		<AssemblyVersion Condition=" '$(VersionSuffix)' == '' ">1.0.0</AssemblyVersion>
 		<AssemblyVersion Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</AssemblyVersion>
 		<Version Condition=" '$(VersionSuffix)' == '' ">1.0.0</Version>
 		<Version Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</Version>
-
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
-		<PackageReference Include="system.security.accesscontrol">
-			<Version>4.7.0</Version>
-		</PackageReference>
-		<PackageReference Include="system.security.Principal.Windows">
-			<Version>4.7.0</Version>
-		</PackageReference>
+	<ItemGroup>
+	  <PackageReference Include="System.Security.AccessControl" Version="6.0.0" />
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="&quot;C:\Program Files (x86)\Microsoft SDKs\ClickOnce\SignTool\signtool.exe&quot; sign /sha1 &quot;$(CSCERTTHUMBPRINT)&quot; /t http://timestamp.digicert.com /fd sha256 /v &quot;$(TargetPath)&quot;&#xD;&#xA;&quot;C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\symstore&quot; add /f &quot;$(TargetDir)*.pdb&quot; /s \\localhost\symbols /t &quot;$(ProjectName)&quot; /v &quot;@(VersionNumber)&quot;" />
-	</Target>
-
-	<Target Name="PostPackNugetDeploy" AfterTargets="Pack">
-		<Exec Command="d:\dev\nuget\nuget.exe add &quot;$(OutputPath)$(PackageId).$(PackageVersion).nupkg&quot; -source D:\dev\nuget\repo" />
+	  <Exec Command="call %25BuildToolsPath%25\sign-and-save-symbols.bat $(TargetPath) $(TargetDir) $(ProjectName)" />
 	</Target>
 
 </Project>
