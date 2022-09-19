@@ -21,15 +21,13 @@ steps:
   inputs:
     command: build
     publishWebProjects: false
+    arguments: '-c $(buildConfiguration)'
     projects: '**/*.csproj'
     zipAfterPublish: false
 - task: DotNetCoreCLI@2
   displayName: dotnet pack
   inputs:
     command: 'pack'
-    publishWebProjects: false
-    projects: '**/*.csproj'
-    zipAfterPublish: false
 
 - task: DotNetCoreCLI@2
   displayName: dotnet push
