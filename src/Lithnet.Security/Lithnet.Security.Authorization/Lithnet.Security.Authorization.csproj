@@ -23,7 +23,7 @@
 	  <PackageReference Include="System.Security.AccessControl" Version="6.0.0" />
 	</ItemGroup>
 
-	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(BuildingInsideVisualStudio)' == 'true'">
 	  <Exec Command="call %25BuildToolsPath%25\sign-and-save-symbols.bat $(TargetPath) $(TargetDir) $(ProjectName)" />
 	</Target>
 
