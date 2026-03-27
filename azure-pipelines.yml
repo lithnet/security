@@ -31,19 +31,8 @@ steps:
   displayName: dotnet build
   inputs:
     command: build
-    publishWebProjects: false
-    arguments: '-c $(buildConfiguration)'
+    arguments: '-c $(buildConfiguration) -p:Version=$(build.version) -p:GeneratePackageOnBuild=false'
     projects: '**/*.csproj'
-    zipAfterPublish: false
-
-- job: "build"
-  steps:
-  - task: DotNetCoreCLI@2
-    displayName: dotnet build
-    inputs:
-      command: build
-      arguments: '-c $(buildConfiguration) -p:Version=$(build.version) -p:GeneratePackageOnBuild=false'
-      projects: '**/*.csproj'
 
 - task: DotNetCoreCLI@2
   inputs:
