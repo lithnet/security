@@ -54,7 +54,7 @@ steps:
 
       $cmdargs = @(
         "sign",
-        "-d", "Lithnet Security Library",
+        "-d", "Lithnet Security Authorization Library",
         "-kvu", "$(akv.url)",
         "-kvi", "$(akv.applicationID)",
         "-kvs", "$(akv.secret)",
@@ -88,7 +88,7 @@ steps:
     targetType: 'inline'
     script: |
       $cmdargs = @(
-        "sign", "$(Build.ArtifactStagingDirectory)\Lithnet.Security.$(build.version).nupkg"
+        "sign", "$(Build.ArtifactStagingDirectory)\Lithnet.Security.Authorization.$(build.version).nupkg"
         "-fd", "sha256",
         "-kvu", "$(akv.url)",
         "-kvi", "$(akv.applicationID)",
@@ -109,7 +109,7 @@ steps:
     targetType: 'inline'
     script: |
       $cmdargs = @(
-        "sign", "$(Build.ArtifactStagingDirectory)\Lithnet.Security.$(build.version).snupkg"
+        "sign", "$(Build.ArtifactStagingDirectory)\Lithnet.Security.Authorization.$(build.version).snupkg"
         "-fd", "sha256",
         "-kvu", "$(akv.url)",
         "-kvi", "$(akv.applicationID)",

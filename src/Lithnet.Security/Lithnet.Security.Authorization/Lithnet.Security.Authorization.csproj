@@ -9,19 +9,19 @@
 		<Deterministic>true</Deterministic>
 		<Authors>Lithnet</Authors>
 		<Company>Lithnet</Company>
-		<Product>Lithnet.Security</Product>
+		<Product>Lithnet.Security.Authorization</Product>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Description>Lithnet Security Library</Description>
+		<Description>Lithnet Security Authorization Library</Description>
 		<Company>Lithnet</Company>
 		<Copyright>Copyright 2026 Lithnet Pty Ltd</Copyright>
-		<ProductName>Lithnet Security Library</ProductName>
+		<ProductName>Lithnet Security Authorization Library</ProductName>
 		<VersionPrefix>1.1.0</VersionPrefix>
 		<Authors>Lithnet</Authors>
 		<AutoIncrementPackageRevision>true</AutoIncrementPackageRevision>
 		<IsPackable>true</IsPackable>
-		<PackageId>Lithnet.Security</PackageId>
+		<PackageId>Lithnet.Security.Authorization</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/lithnet/security</RepositoryUrl>
 		<SupportUrl>https://github.com/lithnet/security</SupportUrl>
