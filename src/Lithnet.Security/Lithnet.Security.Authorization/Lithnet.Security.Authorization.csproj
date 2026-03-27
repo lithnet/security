@@ -4,27 +4,34 @@
 		<TargetFrameworks>netstandard2.0</TargetFrameworks>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<SignAssembly>false</SignAssembly>
+		<OutputType>Library</OutputType>
+		<PlatformTargets>AnyCPU</PlatformTargets>
+		<Deterministic>true</Deterministic>
 		<Authors>Lithnet</Authors>
 		<Company>Lithnet</Company>
-		<Product>Lithnet.Security.Authorization</Product>
+		<Product>Lithnet.Security</Product>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Description>Lithnet Security Library</Description>
+		<Company>Lithnet</Company>
+		<Copyright>Copyright 2026 Lithnet Pty Ltd</Copyright>
+		<ProductName>Lithnet Security Library</ProductName>
+		<VersionPrefix>1.1.0</VersionPrefix>
+		<Authors>Lithnet</Authors>
+		<AutoIncrementPackageRevision>true</AutoIncrementPackageRevision>
+		<IsPackable>true</IsPackable>
+		<PackageId>Lithnet.Security</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageProjectUrl>https://github.com/lithnet/security</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/lithnet/security</RepositoryUrl>
-		<PackageOutputPath>D:\dev\nuget\packages</PackageOutputPath>
-		<Deterministic>false</Deterministic>
-		<VersionSuffix>1.0.$([System.DateTime]::UtcNow.Date.Subtract($([System.DateTime]::Parse("2000-01-01"))).TotalDays).$([System.Math]::Floor($([MSBuild]::Divide($([System.DateTime]::UtcNow.TimeOfDay.TotalSeconds), 1.32))))</VersionSuffix>
-		<AssemblyVersion Condition=" '$(VersionSuffix)' == '' ">1.0.0</AssemblyVersion>
-		<AssemblyVersion Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</AssemblyVersion>
-		<Version Condition=" '$(VersionSuffix)' == '' ">1.0.0</Version>
-		<Version Condition=" '$(VersionSuffix)' != '' ">$(VersionSuffix)</Version>
+		<SupportUrl>https://github.com/lithnet/security</SupportUrl>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="System.Security.AccessControl" Version="6.0.0" />
+		<PackageReference Include="System.Security.AccessControl" Version="6.0.0" />
 	</ItemGroup>
-
-	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(BuildingInsideVisualStudio)' == 'true'">
-	  <Exec Command="call %25BuildToolsPath%25\sign-and-save-symbols.bat $(TargetPath) $(TargetDir) $(ProjectName)" />
-	</Target>
-
 </Project>

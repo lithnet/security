@@ -1,18 +1,29 @@
-# .NET Desktop
-# Build and run tests for .NET Desktop or Windows classic desktop solutions.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
-
-trigger:
-- master
-
 pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  - name: buildPlatform 
+    value: 'Any CPU'
+  - name: buildConfiguration
+    value: 'Release'
+  - name: build.version.major
+    value: 1
+  - name: build.version.minor
+    value: 1
+  - name: build.version.revision
+    value: $[counter(format('{0}.{1}', variables['build.version.major'], variables['build.version.minor']), 0)]
+  - name: build.version.suffix
+    value:
+  - name: build.version
+    value: $(build.version.major).$(build.version.minor).$(build.version.revision)$(build.version.suffix)
+  - name: build.versionShort
+    value: $(build.version.major).$(build.version.minor).$(build.version.revision)
+  - name: build.date
+    value: $[format('{0:yyyy}-{0:MM}-{0:dd}T{0:HH}:{0:mm}:{0:ss}', pipeline.startTime)]
+  - group: Azure KeyVault Code Signing
+
+name: $(build.version.major).$(build.version.minor).$(build.version.revision)$(build.version.suffix)
+trigger: none
 
 steps:
 
@@ -24,15 +35,118 @@ steps:
     arguments: '-c $(buildConfiguration)'
     projects: '**/*.csproj'
     zipAfterPublish: false
+
+- job: "build"
+  steps:
+  - task: DotNetCoreCLI@2
+    displayName: dotnet build
+    inputs:
+      command: build
+      arguments: '-c $(buildConfiguration) -p:Version=$(build.version) -p:GeneratePackageOnBuild=false'
+      projects: '**/*.csproj'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'custom'
+    custom: 'tool'
+    arguments: 'update --global azuresigntool'
+  displayName: Install AzureSignTool
+
+- task: PowerShell@2
+  displayName: 'Sign files with AzureSignTool'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $files = @()
+      $files += (Get-ChildItem -Recurse -Path "$(Build.SourcesDirectory)\Lithnet*.dll").FullName
+
+      write-host "Signing $($files.Length) files:"
+      write-output $files
+
+      $cmdargs = @(
+        "sign",
+        "-d", "Lithnet Security Library",
+        "-kvu", "$(akv.url)",
+        "-kvi", "$(akv.applicationID)",
+        "-kvs", "$(akv.secret)",
+        "-kvt", "$(akv.tenantId)",
+        "-kvc", "$(akv.certificateName)",
+        "-tr", "http://timestamp.digicert.com",
+        "-td", "sha256"
+      )
+
+      $cmdargs += $files
+        
+      & AzureSignTool $cmdargs
+    failOnStderr: true
+    showWarnings: true
+
 - task: DotNetCoreCLI@2
   displayName: dotnet pack
   inputs:
     command: 'pack'
 
 - task: DotNetCoreCLI@2
-  displayName: dotnet push
+  inputs:
+    command: 'custom'
+    custom: 'tool'
+    arguments: 'update --global NuGetKeyVaultSignTool'
+  displayName: Install NugetKeyVaultSignTool
+
+- task: PowerShell@2
+  displayName: 'Sign Nuget package'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $cmdargs = @(
+        "sign", "$(Build.ArtifactStagingDirectory)\Lithnet.Security.$(build.version).nupkg"
+        "-fd", "sha256",
+        "-kvu", "$(akv.url)",
+        "-kvi", "$(akv.applicationID)",
+        "-kvs", "$(akv.secret)",
+        "-kvt", "$(akv.tenantId)",
+        "-kvc", "$(akv.certificateName)",
+        "-tr", "http://timestamp.digicert.com",
+        "-td", "sha256"
+      )
+        
+      & NuGetKeyVaultSignTool $cmdargs
+    failOnStderr: true
+    showWarnings: true
+
+- task: PowerShell@2
+  displayName: 'Sign Nuget symbols package'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $cmdargs = @(
+        "sign", "$(Build.ArtifactStagingDirectory)\Lithnet.Security.$(build.version).snupkg"
+        "-fd", "sha256",
+        "-kvu", "$(akv.url)",
+        "-kvi", "$(akv.applicationID)",
+        "-kvs", "$(akv.secret)",
+        "-kvt", "$(akv.tenantId)",
+        "-kvc", "$(akv.certificateName)",
+        "-tr", "http://timestamp.digicert.com",
+        "-td", "sha256"
+      )
+        
+      & NuGetKeyVaultSignTool $cmdargs
+    failOnStderr: true
+    showWarnings: true
+
+- task: DotNetCoreCLI@2
+  displayName: Publish package to internal feed
   inputs:
     command: 'push'
     packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+    nuGetFeedType: 'internal'
+    publishVstsFeed: '91a552bc-359d-4f28-bdbd-f36f71cfdf81'
+
+- task: DotNetCoreCLI@2
+  displayName: Publish symbols to internal feed
+  inputs:
+    command: 'push'
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/*.snupkg'
     nuGetFeedType: 'internal'
     publishVstsFeed: '91a552bc-359d-4f28-bdbd-f36f71cfdf81'

@@ -10,7 +10,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Lithnet.Security.Authorization
 {
-    public sealed class AuthorizationContext : IDisposable
+    public sealed class AuthorizationContext : IDisposable, IAuthorizationContext
     {
         private readonly SafeAuthzContextHandle authzContext;
 
